@@ -1,0 +1,38 @@
+import tweepy
+import pandas as pd
+import os
+from datetime import datetime, timedelta
+
+# Twitter API credentials from environment variables
+API_KEY = os.getenv('UDbuxwC3IaeCrbBq5DqPNHkbC')
+API_SECRET = os.getenv('lz8u02QFGqjx95XBACNSWWN1ok0RywyoqF4JV1gAoHWeKZyuNY')
+ACCESS_TOKEN = os.getenv('1825765481262743552-BTJH6pnaIsdZyZYteIZmIfIqVEEFYT')
+ACCESS_TOKEN_SECRET = os.getenv('76ySuATEaurhaaZvkbiNsZt1u9pbJNZpQyF0pnNqAVyNI')
+
+# Authenticate to Twitter
+auth = tweepy.OAuth1UserHandler(API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
+api = tweepy.API(auth)
+
+# Load the Excel file
+df = pd.read_read('tweets.csv')
+
+# Get the current time
+now = datetime.now()
+current_time = now.strftime("%H:%M")
+
+# Function to tweet
+def tweet_from_excel(row):
+    tweet_text = row['Tweet']
+    try:
+        api.update_status(tweet_text)
+        print(f"Tweeted: {tweet_text}")
+    except Exception as e:
+        print(f"Failed to tweet: {tweet_text}, Error: {str(e)}")
+
+# Check if there's a tweet scheduled for the current time
+time_tolerance = timedelta(minutes=15)  # 15-minute tolerance
+
+for index, row in df.iterrows():
+    tweet_time = datetime.strptime(row['Time'], "%H:%M")
+    if now - time_tolerance <= tweet_time <= now + time_tolerance:
+        tweet_from_excel(row)
